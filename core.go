@@ -82,6 +82,10 @@ type DataParser interface {
 	// kanDoraIndicator: 0-33
 	IsNewDora() bool
 	ParseNewDora() (kanDoraIndicator int)
+
+	//修罗之战
+	IsHuanSanZhang() bool
+	ParseHuanSanZhang() (doraIndicators []int, InhandTiles []int, OuthandTiles []int, numRedFives []int)
 }
 
 type playerInfo struct {
@@ -267,6 +271,18 @@ func (d *roundData) newGame() {
 
 func (d *roundData) descLeftCounts(tile int) {
 	d.leftCounts[tile]--
+	if d.leftCounts[tile] < 0 {
+		info := fmt.Sprintf("数据异常: %s 数量为 %d", util.MahjongZH[tile], d.leftCounts[tile])
+		if debugMode {
+			panic(info)
+		} else {
+			fmt.Println(info)
+		}
+	}
+}
+
+func (d *roundData) inscLeftCounts(tile int) {
+	d.leftCounts[tile]++
 	if d.leftCounts[tile] < 0 {
 		info := fmt.Sprintf("数据异常: %s 数量为 %d", util.MahjongZH[tile], d.leftCounts[tile])
 		if debugMode {
@@ -513,6 +529,30 @@ func (d *roundData) analysis() error {
 	}
 
 	switch {
+	case d.parser.IsHuanSanZhang():
+		fmt.Println("换三张成功！")
+		doraIndicators, inhands, outhands, numRedFives := d.parser.ParseHuanSanZhang()
+		d.doraIndicators = doraIndicators
+		for _, dora := range doraIndicators {
+			d.descLeftCounts(dora)
+		}
+		d.numRedFives = numRedFives
+		for _, tile := range inhands {
+			d.counts[tile]++
+			d.descLeftCounts(tile)
+		}
+
+		for _, tile := range outhands {
+			d.counts[tile]--
+			d.inscLeftCounts(tile)
+		}
+		playerInfo := d.newModelPlayerInfo()
+		fmt.Println()
+		info := fmt.Sprintln(util.TilesToMahjongZHInterface(d.doraIndicators)...)
+		info = info[:len(info)-1]
+		color.HiYellow("宝牌指示牌是 " + info)
+		fmt.Println()
+		return analysisPlayerWithRisk(playerInfo, nil)
 	case d.parser.IsInit():
 		// round 开始/重连
 		if !debugMode && !d.skipOutput {

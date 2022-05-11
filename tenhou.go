@@ -1,15 +1,15 @@
 package main
 
 import (
-	"strings"
-	"strconv"
 	"fmt"
-	"regexp"
-	"github.com/EndlessCheng/mahjong-helper/util/model"
-	"sort"
 	"github.com/EndlessCheng/mahjong-helper/util"
-	"net/url"
+	"github.com/EndlessCheng/mahjong-helper/util/model"
 	"github.com/fatih/color"
+	"net/url"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
 )
 
 /*
@@ -232,6 +232,14 @@ type tenhouRoundData struct {
 	msg        *tenhouMessage
 
 	isRoundEnd bool // 某人和牌或流局。初始值为 true
+}
+
+func (d *tenhouRoundData) ParseHuanSanZhang() (doraIndicators []int) {
+	panic("implement me")
+}
+
+func (d *tenhouRoundData) IsHuanSanZhang() bool {
+	panic("implement me")
 }
 
 func (*tenhouRoundData) _tenhouTileToTile34(tenhouTile int) int {

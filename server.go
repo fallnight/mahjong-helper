@@ -512,7 +512,7 @@ func runServer(isHTTPS bool, port int) (err error) {
 		majsoulRoundData:      &majsoulRoundData{selfSeat: -1},
 		majsoulRecordMap:      map[string]*majsoulRecordBaseInfo{},
 	}
-	h.tenhouRoundData.roundData = newGame(h.tenhouRoundData)
+	//h.tenhouRoundData.roundData = newGame(h.tenhouRoundData)
 	h.majsoulRoundData.roundData = newGame(h.majsoulRoundData)
 
 	go h.runAnalysisTenhouMessageTask()

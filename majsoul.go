@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/fatih/color"
+	"github.com/EndlessCheng/mahjong-helper/platform/majsoul/proto/lq"
 	"github.com/EndlessCheng/mahjong-helper/util"
 	"github.com/EndlessCheng/mahjong-helper/util/model"
+	"github.com/fatih/color"
 	"sort"
 	"time"
-	"github.com/EndlessCheng/mahjong-helper/platform/majsoul/proto/lq"
 )
 
 type majsoulMessage struct {
@@ -116,6 +116,9 @@ type majsoulMessage struct {
 	//Gameend      *bool `json:"gameend"`
 
 	// ActionBabei
+
+	InTiles  interface{} `json:"in_tiles"`
+	OutTiles interface{} `json:"out_tiles"`
 }
 
 const (
@@ -286,6 +289,47 @@ func (d *majsoulRoundData) IsInit() bool {
 	msg := d.msg
 	// ResAuthGame || ActionNewRound RecordNewRound
 	return msg.IsGameStart != nil || msg.MD5 != ""
+}
+
+func (d *majsoulRoundData) IsHuanSanZhang() bool {
+	msg := d.msg
+	// ResAuthGame || ActionNewRound RecordNewRound
+	return msg.InTiles != nil
+}
+
+func (d *majsoulRoundData) ParseHuanSanZhang() (doraIndicators []int, InhandTiles []int, OuthandTiles []int, numRedFives []int) {
+	msg := d.msg
+
+	for _, dora := range msg.Doras {
+		doraIndicator, _ := d.mustParseMajsoulTile(dora)
+		doraIndicators = append(doraIndicators, doraIndicator)
+	}
+
+	numRedFives = make([]int, 3)
+
+	var majsoulInTiles []string
+	var majsoulOutTiles []string
+
+	majsoulInTiles = d.normalTiles(msg.InTiles)
+	majsoulOutTiles = d.normalTiles(msg.OutTiles)
+
+	for _, majsoulInTile := range majsoulInTiles {
+		tile, isRedFive := d.mustParseMajsoulTile(majsoulInTile)
+		InhandTiles = append(InhandTiles, tile)
+		if isRedFive {
+			numRedFives[tile/9]++
+		}
+	}
+
+	for _, majsoulOutTile := range majsoulOutTiles {
+		tile, isRedFive := d.mustParseMajsoulTile(majsoulOutTile)
+		OuthandTiles = append(OuthandTiles, tile)
+		if isRedFive {
+			numRedFives[tile/9]--
+		}
+	}
+
+	return
 }
 
 func (d *majsoulRoundData) ParseInit() (roundNumber int, benNumber int, dealer int, doraIndicators []int, handTiles []int, numRedFives []int) {
